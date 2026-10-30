@@ -1,0 +1,333 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+:root {
+  color-scheme: light;
+  --ink: #25242a;
+  --muted: #66656b;
+  --line: #e5e5e1;
+  --paper: #fffefa;
+  --surface: #ffffff;
+  --canvas: #f7f7f4;
+  --field: #fffefa;
+  --coral: #bd4b3f;
+  --navy: #242c3d;
+  --lavender: #ddd5f5;
+  --shadow: 0 8px 24px rgba(36, 44, 61, 0.06);
+  --focus-ring: rgba(242, 119, 104, 0.24);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --shadow-card: 0 2px 8px rgba(36, 44, 61, 0.045);
+  --font-body: "DM Sans", "Segoe UI", sans-serif;
+  --font-heading: "Space Grotesk", "Segoe UI", sans-serif;
+  --role-admin: #7553b8;
+  --role-lead: #236d8b;
+  --role-member: #28774e;
+  --project-coral: #f38a7d;
+  --project-sky: #82bdd4;
+  --project-lilac: #a99bdd;
+  --project-mint: #8fc6ac;
+  --status-slate: #a9aaa8;
+  --status-amber: #a66a13;
+  --status-blue: #2873a0;
+  --status-violet: #755bb2;
+  --status-green: #317b51;
+  --priority-low-bg: #e8f4eb;
+  --priority-low-ink: #386e47;
+  --priority-medium-bg: #eaf1fa;
+  --priority-medium-ink: #3d597c;
+  --priority-high-bg: #fff3d9;
+  --priority-high-ink: #855b16;
+  --priority-urgent-bg: #fce9e5;
+  --priority-urgent-ink: #923d34;
+  --success-bg: #e9f5ed;
+  --success-ink: #327653;
+  --error-ink: #a62929;
+  --avatar-coral-bg: #f8c1b8;
+  --avatar-coral-ink: #754037;
+  --avatar-sky-bg: #c4e5ee;
+  --avatar-sky-ink: #315d70;
+  --avatar-lilac-bg: #dcd5f6;
+  --avatar-lilac-ink: #51457f;
+  --avatar-mint-bg: #c6e5d2;
+  --avatar-mint-ink: #2f6348;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e8eaf0;
+  --muted: #b6bbc5;
+  --line: rgba(226, 231, 240, 0.14);
+  --paper: #22262d;
+  --surface: #282d35;
+  --canvas: #191c21;
+  --field: #1e2228;
+  --coral: #f08a7b;
+  --navy: #38435a;
+  --lavender: #b9addf;
+  --shadow: 0 14px 38px rgba(0, 0, 0, 0.24);
+  --focus-ring: rgba(237, 135, 122, 0.28);
+  --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.2);
+  --role-admin: #c4a8ff;
+  --role-lead: #81cbe8;
+  --role-member: #83d6a5;
+  --project-coral: #f08a7d;
+  --project-sky: #82bdd4;
+  --project-lilac: #a99bdd;
+  --project-mint: #8fc6ac;
+  --status-slate: #9298a2;
+  --status-amber: #e9b96c;
+  --status-blue: #80b7dc;
+  --status-violet: #a998d5;
+  --status-green: #7fc29d;
+  --priority-low-bg: #244233;
+  --priority-low-ink: #a1ddb4;
+  --priority-medium-bg: #263b51;
+  --priority-medium-ink: #a9c7ef;
+  --priority-high-bg: #4a3b20;
+  --priority-high-ink: #f4d18c;
+  --priority-urgent-bg: #4d2d2c;
+  --priority-urgent-ink: #ffb6a9;
+  --success-bg: #244233;
+  --success-ink: #a1ddb4;
+  --error-ink: #ffaaa0;
+  --avatar-coral-bg: #633d3b;
+  --avatar-coral-ink: #ffd2ca;
+  --avatar-sky-bg: #294858;
+  --avatar-sky-ink: #c2e9f5;
+  --avatar-lilac-bg: #403a5c;
+  --avatar-lilac-ink: #ddd4ff;
+  --avatar-mint-bg: #294837;
+  --avatar-mint-ink: #c5efd4;
+}
+
+html {
+  font-family: var(--font-body);
+}
+
+body {
+  color: var(--ink);
+  background: var(--canvas);
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+  color: var(--ink);
+  border-color: var(--line);
+  background-color: var(--field);
+}
+
+select {
+  color-scheme: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  box-shadow: 0 0 0 1000px var(--field) inset;
+  transition: background-color 9999s ease-out;
+}
+
+#notification-panel button {
+  font-size: 12px !important;
+  opacity: 1 !important;
+}
+
+#notification-panel strong {
+  font-size: 14px !important;
+}
+
+#notification-panel p,
+#notification-panel small,
+#notification-panel span {
+  color: var(--muted) !important;
+  font-size: 12px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@theme {
+  --font-sans: "DM Sans", "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --color-ink: var(--ink);
+  --color-line: var(--line);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-canvas: var(--canvas);
+  --color-field: var(--field);
+  --color-coral: var(--coral);
+  --color-navy: var(--navy);
+  --color-muted: var(--muted);
+}
+
+@utility modal-backdrop {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(31, 37, 52, 0.38);
+}
+
+@utility modal-form {
+  width: min(100%, 420px);
+  display: grid;
+  gap: 16px;  
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+
+  & label {
+    display: grid;
+    gap: 7px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  & input,
+  & select,
+  & textarea {
+    width: 100%;
+    padding: 10px 11px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    outline: 0;
+    color: var(--ink);
+    background: var(--field);
+    font-size: 14px;
+  }
+
+  & textarea {
+    resize: vertical;
+    line-height: 1.4;
+  }
+
+  & input:focus,
+  & select:focus,
+  & textarea:focus {
+    border-color: var(--line);
+    box-shadow: none;
+  }
+}
+
+@utility modal-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+
+  & h2 {
+    margin: 0;
+    font: 600 20px "Space Grotesk";
+  }
+}
+
+@utility modal-eyebrow {
+  margin: 0 0 9px;
+  color: var(--coral);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@utility modal-close {
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+}
+
+@utility action-button {
+  border: 0;
+  border-radius: 7px;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
