@@ -1,66 +1,146 @@
 # TaskForge API
 
-MongoDB and Express API for the TaskForge frontend.
+The TaskForge backend is an Express API with MongoDB persistence and Socket.IO support. For full-stack installation instructions, see the [project README](../README.md).
 
-## Run locally
+## Requirements
 
-1. Copy `.env.example` to `.env` and set a long `JWT_SECRET`.
-2. Make sure MongoDB is running. On Windows, check it with `Get-Service MongoDB` and start it with `Start-Service MongoDB` when needed.
-3. Install dependencies with `npm install`.
-4. Start the API with `npm run dev`.
-5. Populate demo data with `npm run seed` when you want a ready-made workspace.
+- Node.js 20.19+ or 22.12+
+- npm
+- MongoDB (local, Docker, or MongoDB Atlas)
 
-Docker is optional. Use `docker compose up -d mongodb` only when Docker Desktop is installed and running.
+## Local setup
 
-Demo accounts all use the development password `TeamFlow123!`:
+From the repository root, install backend dependencies and create the local environment file:
 
-- `owner@teamflow.demo`
-- `admin@teamflow.demo`
-- `member@teamflow.demo`
-- `lead@teamflow.demo` (Team Lead)
+```powershell
+Set-Location backend
+npm install
+Copy-Item .env.example .env
+```
 
-The API runs at `http://127.0.0.1:5000` and the health check is `GET /api/health`.
+Edit `backend\.env` before starting the API:
 
-## Current API
+| Variable | Required | Description |
+| --- | --- | --- |
+| `PORT` | No | HTTP port; defaults to `5000` |
+| `MONGODB_URI` | Yes | MongoDB connection string; the example uses `mongodb://127.0.0.1:27017/taskforge` |
+| `JWT_SECRET` | Yes | Long, random secret for signing JWTs; replace the example value |
+| `CLIENT_ORIGIN` | No | Comma-separated allowed browser origins; defaults to the Vite localhost origin |
+| `NODE_ENV` | No | Set to `development` for local work |
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `POST /api/auth/change-password`
-- `GET /api/teams`
-- `POST /api/teams`
-- `GET /api/teams/:teamId`
-- `PATCH /api/teams/:teamId`
-- `DELETE /api/teams/:teamId`
-- `GET /api/teams/:teamId/members`
-- `POST /api/teams/:teamId/members` with `{ "name": "...", "email": "...", "password": "...", "role": "ADMIN" }`
-- `POST /api/teams/:teamId/members/:userId/password-reset` (owner/admin only; returns a one-time temporary password and requires the member to change it)
-- `PATCH /api/teams/:teamId/members/:userId`
-- `DELETE /api/teams/:teamId/members/:userId`
-- `GET /api/projects`
-- `POST /api/projects`
-- `GET /api/projects/:projectId`
-- `PATCH /api/projects/:projectId`
-- `POST /api/projects/:projectId/members`
-- `DELETE /api/projects/:projectId/members/:userId`
-- `DELETE /api/projects/:projectId`
-- `GET /api/tasks/project/:projectId`
-- `POST /api/tasks/project/:projectId`
-- `PATCH /api/tasks/:taskId`
-- `DELETE /api/tasks/:taskId`
-- `GET /api/comments/task/:taskId`
-- `POST /api/comments/task/:taskId`
-- `GET /api/notifications`
-- `PATCH /api/notifications/:notificationId/read`
-- `PATCH /api/notifications/read-all`
-- `GET /api/activity/project/:projectId?page=1&limit=20`
+Never commit `.env` or use development secrets in production. For local MongoDB with Docker Desktop, start the container from the repository root:
 
-Protected endpoints require `Authorization: Bearer <token>`. Team and project access is checked on the server for every protected resource. Passwords are hashed with bcrypt; hashes and JWT secrets are never returned.
+```powershell
+docker compose up -d mongodb
+```
 
-Public registration requires a non-empty name, a valid unique email address, a password of at least 8 characters containing uppercase and lowercase letters, a number, and a special character, plus a matching confirmation. The first account in an empty database is assigned the account-level `OWNER` role; public registrations after that receive `MEMBER` regardless of submitted fields. Only the account owner (or an existing workspace owner) can create a workspace. Workspace roles continue to be enforced independently for team and project actions.
+Alternatively, start a local MongoDB service or configure `MONGODB_URI` with an Atlas connection string and the appropriate network access settings.
 
-Team roles are `OWNER`, `ADMIN`, `TEAM_LEAD`, and `MEMBER`. Owners can create Admins and projects. Admins can create Members and Team Leads, invite team members to projects, assign tasks, and manage task work. Team Leads can be assigned projects and tasks.
+Start the API from the `backend` directory:
 
-Socket.io is served from the same port. Clients can emit `room:join` with `{ "type": "project", "id": "..." }` and receive `comment.created` events for joined project rooms.
+```powershell
+npm run dev
+```
 
-This is the backend foundation for the remaining real-time comments, notifications, Socket.io events, pagination, and automated integration tests.
+The API listens at `http://127.0.0.1:5000` by default. `GET /api/health` is a public health check. For a non-watching start, use `npm start`.
+
+## Demo data
+
+Run this from the `backend` directory:
+
+```powershell
+npm run seed
+```
+
+**This is destructive:** the script deletes existing users, teams, projects, tasks, comments, notifications, and activity logs from the database configured by `MONGODB_URI`, then creates sample data. Run it only against a disposable development database.
+
+All seeded accounts use the development-only password `TeamFlow123!`:
+
+- Owner: `owner@teamflow.demo`
+- Admin: `admin@teamflow.demo`
+- Member: `member@teamflow.demo`
+- Team lead: `lead@teamflow.demo`
+
+## Authentication and access
+
+- Registration requires a name, unique valid email, password of at least eight characters with uppercase and lowercase letters, a number, and a special character, plus a matching confirmation.
+- The first account in an empty database receives the account-level `OWNER` role. Later public registrations receive `MEMBER`; role fields submitted during public registration do not grant privileges.
+- Protected HTTP endpoints require the JWT returned by login or registration in the `Authorization: Bearer <token>` header.
+- Tokens expire after seven days. Logging out invalidates existing tokens for that account.
+- Team roles are `OWNER`, `ADMIN`, `TEAM_LEAD`, and `MEMBER`. Access is checked by the API for protected team and project resources.
+- Passwords are hashed with bcrypt. Password-reset responses for invited team members provide a temporary password, which the member must change.
+
+## API routes
+
+All routes below are prefixed with `/api`. Except for `GET /health`, authentication routes `POST /auth/register` and `POST /auth/login`, and the Socket.IO connection, HTTP routes require authentication.
+
+| Method | Route | Description |
+| --- | --- | --- |
+| `GET` | `/health` | API health status |
+| `POST` | `/auth/register` | Register an account |
+| `POST` | `/auth/login` | Sign in |
+| `POST` | `/auth/logout` | Invalidate the current token |
+| `GET` | `/auth/me` | Get the current account |
+| `POST` | `/auth/change-password` | Change the current account password |
+| `GET` | `/teams` | List the current user's teams |
+| `POST` | `/teams` | Create a team |
+| `GET` | `/teams/:teamId` | Get a team |
+| `PATCH` | `/teams/:teamId` | Update a team |
+| `DELETE` | `/teams/:teamId` | Delete a team |
+| `GET` | `/teams/:teamId/members` | List team members |
+| `POST` | `/teams/:teamId/members` | Add a member (`name`, `email`, `password`, `role`) |
+| `POST` | `/teams/:teamId/members/:userId/password-reset` | Reset a member password |
+| `PATCH` | `/teams/:teamId/members/:userId` | Update a member's team role |
+| `DELETE` | `/teams/:teamId/members/:userId` | Remove a team member |
+| `GET` | `/projects` | List projects accessible to the current user |
+| `POST` | `/projects` | Create a project (`teamId` is required) |
+| `GET` | `/projects/:projectId` | Get a project |
+| `PATCH` | `/projects/:projectId` | Update a project |
+| `DELETE` | `/projects/:projectId` | Delete a project |
+| `POST` | `/projects/:projectId/members` | Add or update a project member |
+| `DELETE` | `/projects/:projectId/members/:userId` | Remove a project member |
+| `GET` | `/tasks/project/:projectId` | List tasks in a project |
+| `POST` | `/tasks/project/:projectId` | Create a task |
+| `GET` | `/tasks/:taskId` | Get a task |
+| `PATCH` | `/tasks/:taskId` | Update a task |
+| `DELETE` | `/tasks/:taskId` | Delete a task |
+| `PATCH` | `/tasks/:taskId/move` | Move a task on the board |
+| `POST` | `/tasks/:taskId/submit-review` | Submit a task for review |
+| `POST` | `/tasks/:taskId/request-changes` | Request changes to a task |
+| `POST` | `/tasks/:taskId/approve-complete` | Approve task completion |
+| `GET` | `/comments/task/:taskId` | List comments on a task |
+| `POST` | `/comments/task/:taskId` | Add a task comment |
+| `PATCH` | `/comments/:commentId` | Edit the current user's comment |
+| `DELETE` | `/comments/:commentId` | Delete the current user's comment |
+| `GET` | `/notifications` | List up to 50 notifications for the current user |
+| `PATCH` | `/notifications/:notificationId/read` | Mark a notification as read |
+| `PATCH` | `/notifications/read-all` | Mark all notifications as read |
+| `GET` | `/activity/project/:projectId?page=1&limit=20` | Get paginated project activity |
+| `GET` | `/activity/task/:taskId` | Get task activity |
+
+Successful responses generally use a JSON object with `success` and `data` fields. Delete endpoints may return `204 No Content`. Request bodies are JSON; validation errors include a message describing invalid input.
+
+## Socket.IO
+
+Socket.IO uses the same host and port as the API. Authenticate a connection with the JWT in the Socket.IO `auth` payload:
+
+```js
+io("http://127.0.0.1:5000", {
+  auth: { token: "<jwt>" },
+});
+```
+
+Supported client events:
+
+- `room:join` with `{ "type": "project", "id": "<projectId>" }` or `{ "type": "team", "id": "<teamId>" }`
+- `room:leave` with the same shape
+
+Server events include `comment.created` for project rooms and `notification.created` for the user's notification room.
+
+## Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Run the API with Nodemon |
+| `npm start` | Run the API with Node |
+| `npm run seed` | Destructively replace configured database contents with demo data |
