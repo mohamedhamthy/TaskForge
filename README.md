@@ -22,7 +22,7 @@ TaskForge/
 
 ## Requirements
 
-- Node.js 20.19+ or 22.12+ (required by the Vite version used by this project)
+- Node.js 24.x (the frontend and backend declare Node 24 for deployment)
 - npm
 - MongoDB, either installed locally, running in Docker, or hosted by MongoDB Atlas
 
@@ -65,7 +65,7 @@ Run these commands from the repository root in PowerShell.
    | `CLIENT_ORIGIN` | Allowed frontend origin; defaults to `http://127.0.0.1:5173` |
    | `NODE_ENV` | Runtime environment, usually `development` locally |
 
-4. The frontend works with its built-in local API and Socket.IO URLs. To override them, copy the frontend example and edit the values:
+4. The frontend works with local API and Socket.IO URLs during development. To override them, copy the frontend example and edit the values:
 
    ```powershell
    Copy-Item frontend\.env.example frontend\.env
@@ -73,8 +73,8 @@ Run these commands from the repository root in PowerShell.
 
    | Variable | Purpose |
    | --- | --- |
-   | `VITE_API_URL` | API base URL, normally `http://127.0.0.1:5000/api` |
-   | `VITE_SOCKET_URL` | Socket.IO server URL, normally `http://127.0.0.1:5000` |
+   | `VITE_API_URL` | API base URL, normally `http://127.0.0.1:5000/api`; required for production builds |
+   | `VITE_SOCKET_URL` | Optional Socket.IO URL; defaults to the origin from `VITE_API_URL` |
 
    Vite only exposes variables prefixed with `VITE_` to frontend code. Never put secrets in frontend environment variables.
 
@@ -153,12 +153,45 @@ Run commands from the corresponding app directory:
 
 There is no root-level application start script; install and run each app separately.
 
+## Deploy to Railway
+
+Deploy the frontend and backend as **two Railway services** from the same GitHub repository. Set each service's **Root Directory** before deploying so Railpack reads that app's package manifest and lockfile:
+
+| Railway service | Root Directory | Build command | Start command | Health check |
+| --- | --- | --- | --- | --- |
+| Backend | `/backend` | Railpack installs from `package-lock.json` | `npm start` | `/api/health` |
+| Frontend | `/frontend` | `npm run build` | `npm start` | `/` |
+
+Set these variables in the Railway service settings (do not commit production `.env` files):
+
+**Backend service**
+
+- `NODE_ENV=production`
+- `MONGODB_URI` — your MongoDB Atlas connection string
+- `JWT_SECRET` — a unique, randomly generated secret of at least 32 characters
+- `CLIENT_ORIGIN` — the exact HTTPS origin of the deployed frontend, with no path (for example, `https://your-frontend.up.railway.app`)
+- Railway supplies `PORT`; the API listens on it and binds to `0.0.0.0`.
+
+Generate a secret locally with Node.js and add the output directly to Railway's backend variables:
+
+```powershell
+node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'))"
+```
+
+**Frontend service**
+
+- `VITE_API_URL` — the deployed backend URL followed by `/api` (for example, `https://your-backend.up.railway.app/api`). This must be available during the production build.
+- Optionally set `VITE_SOCKET_URL` to the backend origin; by default the frontend derives it from `VITE_API_URL`.
+
+Generate public domains for both services, set the frontend variable before its build, and set the backend `CLIENT_ORIGIN` to the frontend's HTTPS origin. Confirm that the Atlas database user and network access rules allow connections from Railway. Do not expose `MONGODB_URI` or `JWT_SECRET` as `VITE_*` variables.
+
 ## Troubleshooting
 
 - **API does not start:** Confirm `backend\.env` exists and has a `JWT_SECRET` and a valid `MONGODB_URI`.
 - **MongoDB connection error:** Start the local service or Docker container, verify the URI and port, or check Atlas credentials and network access.
 - **Frontend cannot reach the API:** Confirm the backend is running and `VITE_API_URL` points to its `/api` endpoint. Restart Vite after changing a frontend `.env` file.
-- **CORS error:** Make sure the frontend's exact origin (including hostname and port) is included in `CLIENT_ORIGIN`. The API allows common localhost and `127.0.0.1` Vite development ports by default.
+- **Production frontend build fails:** Set `VITE_API_URL` in the Railway frontend service before building.
+- **CORS error:** Make sure the frontend's exact origin (including hostname and port) is included in `CLIENT_ORIGIN`. The API allows common localhost and `127.0.0.1` Vite development ports only outside production.
 - **Port already in use:** Stop the other process using the port or change the backend `PORT`. If changing the backend port, update the frontend API and Socket.IO URLs too.
 
 ## More information

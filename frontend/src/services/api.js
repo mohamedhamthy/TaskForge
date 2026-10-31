@@ -1,4 +1,10 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
+export const API_URL =
+  import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "") ||
+  (import.meta.env.DEV ? "http://127.0.0.1:5000/api" : "");
+
+if (!API_URL) {
+  throw new Error("VITE_API_URL must be set to the deployed API URL");
+}
 
 async function request(path, options = {}) {
   const token = localStorage.getItem("taskforge_token");

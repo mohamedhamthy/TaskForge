@@ -19,7 +19,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['backend/**/*.js'],
+    files: ['backend/**/*.js', 'server.js', 'vite.config.js'],
     languageOptions: {
       globals: globals.node,
     },

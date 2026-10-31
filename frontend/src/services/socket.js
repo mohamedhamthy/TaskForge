@@ -1,7 +1,8 @@
 import { io } from "socket.io-client";
+import { API_URL } from "./api";
 
 const SOCKET_URL =
-  import.meta.env.VITE_SOCKET_URL || "http://127.0.0.1:5000";
+  import.meta.env.VITE_SOCKET_URL?.trim() || new URL(API_URL).origin;
 let socket;
 
 export function connectSocket() {
