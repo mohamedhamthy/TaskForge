@@ -24,9 +24,9 @@ Edit `backend\.env` before starting the API:
 | --- | --- | --- |
 | `PORT` | No | HTTP port; defaults to `5000` |
 | `MONGODB_URI` | Yes | MongoDB connection string; the example uses `mongodb://127.0.0.1:27017/taskforge` |
-| `JWT_SECRET` | Yes | Long, random secret for signing JWTs; replace the example value |
-| `CLIENT_ORIGIN` | Production required | Comma-separated allowed browser origins; defaults to the Vite localhost origin in development |
-| `NODE_ENV` | No | Set to `development` for local work |
+| `JWT_SECRET` | Yes | Long, random secret for signing JWTs; use at least 32 characters in production |
+| `CLIENT_ORIGIN` | Production required | Comma-separated exact frontend origins; no origins are allowed by default |
+| `NODE_ENV` | No | Defaults to `development`; set to `production` when deployed |
 
 Never commit `.env` or use development secrets in production. For local MongoDB with Docker Desktop, start the container from the repository root:
 
@@ -42,7 +42,7 @@ Start the API from the `backend` directory:
 npm run dev
 ```
 
-The API listens at `http://127.0.0.1:5000` by default. `GET /api/health` is a public health check. For a non-watching start, use `npm start`.
+The API listens on port `5000` by default and binds to `0.0.0.0`. `GET /health` is a simple service health check; `GET /api/health` reports database readiness. For a non-watching start, use `npm start`.
 
 ## Railway production deployment
 
@@ -53,7 +53,7 @@ Set these Railway variables:
 - `NODE_ENV=production`
 - `MONGODB_URI` to the Atlas connection string
 - `JWT_SECRET` to a unique random value of at least 32 characters
-- `CLIENT_ORIGIN` to the deployed frontend's HTTPS origin, without a path
+- `CLIENT_ORIGIN` to the deployed frontend's HTTPS origin, without a path. Multiple production or preview domains can be comma-separated.
 
 Generate a secret locally with Node.js and add the output directly to Railway's backend variables:
 
@@ -61,7 +61,7 @@ Generate a secret locally with Node.js and add the output directly to Railway's 
 node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'))"
 ```
 
-Railway supplies `PORT`. The API listens on that port and binds to `0.0.0.0`. In production, the backend only allows the configured HTTPS origins; local development origins are not added. The health endpoint returns `503` until MongoDB is connected.
+Railway supplies `PORT`. The API listens on that port and binds to `0.0.0.0`. In production, the backend only allows the configured HTTPS origins; no localhost origins are hardcoded. `/api/health` returns `503` until MongoDB is connected.
 
 Do not set a `VITE_*` variable on the backend, commit `.env` files, or place credentials in frontend build variables. Rotate any credentials that have been shared or exposed.
 

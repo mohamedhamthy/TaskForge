@@ -68,22 +68,11 @@ const configuredOrigins = (process.env.CLIENT_ORIGIN || "")
 if (nodeEnv === "production" && configuredOrigins.length === 0) {
   throw new Error("CLIENT_ORIGIN is required in production");
 }
-const allowedOrigins = new Set(
-  configuredOrigins.map(parseClientOrigin),
-);
-if (nodeEnv !== "production") {
-  for (const origin of [
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-    "http://localhost:5173",
-    "http://localhost:5174",
-  ]) {
-    allowedOrigins.add(origin);
-  }
-}
+const allowedOrigins = new Set(configuredOrigins.map(parseClientOrigin));
 const corsOptions = {
   origin: (origin, callback) =>
     callback(null, !origin || allowedOrigins.has(origin)),
+  credentials: true,
 };
 const port = parsePort(process.env.PORT || 5000);
 const app = express();
@@ -98,6 +87,9 @@ app.use(
     legacyHeaders: false,
   }),
 );
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 app.get("/api/health", (req, res) => {
   const ready = mongoose.connection.readyState === 1;
   res.status(ready ? 200 : 503).json({

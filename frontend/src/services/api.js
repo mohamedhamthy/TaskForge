@@ -1,6 +1,5 @@
 export const API_URL =
-  import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "") ||
-  (import.meta.env.DEV ? "http://127.0.0.1:5000/api" : "");
+  import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "") || "";
 
 if (!API_URL) {
   throw new Error("VITE_API_URL must be set to the deployed API URL");
